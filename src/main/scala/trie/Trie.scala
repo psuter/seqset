@@ -45,7 +45,9 @@ object Trie {
   private def emptyNode[A] = new Node[A](Map.empty[A,Node[A]], isTerminal = false)
 
   private class Node[A](val map: Map[A,Node[A]], val isTerminal: Boolean) extends Trie[A] {
-    def isEmpty : Boolean = !isTerminal && map.values.forall(_.isEmpty)
+    // Note that this assumes we never have "dangling nodes".
+    // Safe as long we don't remove from a Trie.
+    val isEmpty : Boolean = !isTerminal && map.isEmpty
 
     def size : Int = map.values.foldLeft(0)(_ + _.size) + (if(isTerminal) 1 else 0)
 
@@ -91,28 +93,34 @@ object Trie {
       }
     }
 
-    def |(t: Trie[A]) : Node[A] = if(this.eq(t)) {
-      this
-    } else {
+    def |(t: Trie[A]) : Node[A] = {
       // FIXME ugly
       val that: Node[A] = t.asInstanceOf[Node[A]]
 
-      val (m1, t1) = (this.map, this.isTerminal)
-      val (m2, t2) = (that.map, that.isTerminal)
+      if(this.eq(t)) {
+        this
+      } else if(this.isEmpty) {
+        that
+      } else if(that.isEmpty) {
+        this
+      } else {
+        val (m1, t1) = (this.map, this.isTerminal)
+        val (m2, t2) = (that.map, that.isTerminal)
 
-      val newKeys : Seq[A] = (m1.keySet ++ m2.keySet).toSeq
-      val newMap : Map[A,Node[A]] = newKeys.map { k =>
-        val v = (m1.get(k), m2.get(k)) match {
-          case (Some(v1), None)     => v1
-          case (None, Some(v2))     => v2
-          case (Some(v1), Some(v2)) => v1 | v2
-          case (None,None)          => assert(false); ???
-        }
+        val newKeys : Seq[A] = (m1.keySet ++ m2.keySet).toSeq
+        val newMap : Map[A,Node[A]] = newKeys.map { k =>
+          val v = (m1.get(k), m2.get(k)) match {
+            case (Some(v1), None)     => v1
+            case (None, Some(v2))     => v2
+            case (Some(v1), Some(v2)) => v1 | v2
+            case (None,None)          => assert(false); ???
+          }
 
-        (k -> v)
-      }.toMap
+          (k -> v)
+        }.toMap
 
-      new Node(newMap, t1 | t2)
+        new Node(newMap, t1 | t2)
+      }
     }
 
     def iterator : Iterator[Seq[A]] = {

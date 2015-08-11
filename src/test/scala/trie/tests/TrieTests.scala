@@ -140,4 +140,18 @@ class TrieTests extends FlatSpec with Matchers {
 
     s2.contains(List.empty[Int]) should be (true)
   }
+
+  "Union with self" should "not create a new Trie" in {
+    val t1 = Trie.empty[Char] + "Hello" + "Helicopter" + "World"
+    val t2 = Trie.empty[Char] + "World" + "Helicopter" + "Hello"
+
+    val s1 = t1 | t1
+    val s2 = t1 | t2
+
+    (s1 == t1) should be (true)
+    s1.eq(t1) should be (true)
+
+    (s2 == t1) should be (true)
+    s2.eq(t1) should be (false) // it could be true, but that would be suspicious
+  }
 }
