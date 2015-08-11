@@ -29,6 +29,9 @@ sealed trait Trie[A] {
   // Checks whether a sequence is contained in the Trie.
   def contains(s: Seq[A]) : Boolean
 
+  // Returns a trie encoding all the postfixes for a given prefix.
+  def postfixes(prefix: A): Trie[A]
+
   // An iterator returning all sequences encoded in thie Trie.
   def iterator : Iterator[Seq[A]]
 
@@ -47,6 +50,8 @@ object Trie {
     def size : Int = map.values.foldLeft(0)(_ + _.size) + (if(isTerminal) 1 else 0)
 
     def nodeCount : Int = map.values.foldLeft(0)(_ + _.nodeCount) + 1
+
+    def postfixes(prefix: A) : Trie[A] = map.getOrElse(prefix, emptyNode[A])
   
     @tailrec
     final def contains(s: Seq[A]) : Boolean = if(s.isEmpty) {

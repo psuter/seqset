@@ -12,6 +12,8 @@ import org.scalatest._
 import trie._
 
 class TrieTests extends FlatSpec with Matchers {
+  // I'll happily admit that I don't know how to write proper, pretty, BDD-like, tests in ScalaTest.
+
   "An empty Trie" should "behave properly" in {
     val t = Trie.empty[String]
   
@@ -115,5 +117,27 @@ class TrieTests extends FlatSpec with Matchers {
 
     val valueSet : Set[Seq[Char]] = c.iterator.toSet
     valueSet.map(_.mkString("")) should be (Set("HelloWorld", "HelloPropeller", "HelicopterWorld", "HelicopterPropeller"))
+  }
+
+  "Postfixes of a Trie" should "behave properly" in {
+    val t = Trie.empty[Int] +
+      List(1, 2, 3, 4, 5, 6, 7) +
+      List(1, 3, 5, 7, 9, 11) +
+      List(2, 4, 6, 8, 10) +
+      List(1, 4, 9, 25, 36) +
+      List(2)
+
+    val s0 = t.postfixes(0)
+    val s1 = t.postfixes(1)
+    val s2 = t.postfixes(2)
+
+    s0.size should be (0)
+    s1.size should be (3)
+    s2.size should be (2)
+
+    s1.contains(List(4, 9, 25, 36)) should be (true)
+    s1.contains(List(1, 3, 5, 7, 9, 11)) should be (false)
+
+    s2.contains(List.empty[Int]) should be (true)
   }
 }
