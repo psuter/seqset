@@ -42,9 +42,9 @@ sealed trait Trie[A] {
 object Trie {
   def empty[A] : Trie[A] = emptyNode[A]
 
-  private def emptyNode[A] = Node[A](Map.empty[A,Node[A]], isTerminal = false)
+  private def emptyNode[A] = new Node[A](Map.empty[A,Node[A]], isTerminal = false)
 
-  private case class Node[A](map: Map[A,Node[A]], isTerminal: Boolean) extends Trie[A] {
+  private class Node[A](val map: Map[A,Node[A]], val isTerminal: Boolean) extends Trie[A] {
     def isEmpty : Boolean = !isTerminal && map.values.forall(_.isEmpty)
 
     def size : Int = map.values.foldLeft(0)(_ + _.size) + (if(isTerminal) 1 else 0)
@@ -71,18 +71,18 @@ object Trie {
         if(isTerminal) {
           this
         } else {
-          Node(map, true)
+          new Node(map, true)
         }
       } else {
         val h +: t = s
         val sub: Node[A] = map.getOrElse(h, emptyNode[A])
         val newSub = sub + t
-        Node(map.updated(h, newSub), isTerminal)      
+        new Node(map.updated(h, newSub), isTerminal)      
       }
     }
   
     def +++(t: Trie[A]) : Node[A] = {
-      val withPostfixes = Node(map.mapValues(_ +++ t), false)
+      val withPostfixes = new Node(map.mapValues(_ +++ t), false)
 
       if(isTerminal) {
         withPostfixes | t
@@ -91,12 +91,14 @@ object Trie {
       }
     }
 
-    def |(t: Trie[A]) : Node[A] = {
+    def |(t: Trie[A]) : Node[A] = if(this.eq(t)) {
+      this
+    } else {
       // FIXME ugly
       val that: Node[A] = t.asInstanceOf[Node[A]]
 
-      val Node(m1, t1) = this
-      val Node(m2, t2) = that
+      val (m1, t1) = (this.map, this.isTerminal)
+      val (m2, t2) = (that.map, that.isTerminal)
 
       val newKeys : Seq[A] = (m1.keySet ++ m2.keySet).toSeq
       val newMap : Map[A,Node[A]] = newKeys.map { k =>
@@ -110,7 +112,7 @@ object Trie {
         (k -> v)
       }.toMap
 
-      Node(newMap, t1 | t2)
+      new Node(newMap, t1 | t2)
     }
 
     def iterator : Iterator[Seq[A]] = {
@@ -124,5 +126,20 @@ object Trie {
         base
       }
     }
+
+    override def equals(that: Any) : Boolean = {
+      if(that == null) {
+        false
+      } else if(that.isInstanceOf[AnyRef] && that.asInstanceOf[AnyRef].eq(this)) {
+        true
+      } else if(!that.isInstanceOf[Node[_]]) {
+        false
+      } else {
+        val other = that.asInstanceOf[Node[_]]
+        other.isTerminal == this.isTerminal && other.map == this.map
+      }
+    }
+
+    override lazy val hashCode : Int = (map, isTerminal).hashCode
   }
 }
