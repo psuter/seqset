@@ -1,8 +1,13 @@
-# Trie
+# SeqSet
 
-A minimal/work-in-progress implementation of an immutable
-[Trie](https://en.wikipedia.org/wiki/Trie) in Scala. Includes an implementation
-of concatenation (computing the cross-product of concatenation).
+A minimal/work-in-progress implementation of data structures encoding sets of
+sequences. Includes implementations of a
+[Trie](https://en.wikipedia.org/wiki/Trie) and of
+[DFA](https://en.wikipedia.org/wiki/Deterministic_finite_automaton)s and
+[NFA](https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton).
+
+All data structures are immutable from an observer's point of view and support
+equality testing.
 
 # License
 

@@ -5,11 +5,11 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
-package trie.tests
+package seqset.tests
 
 import org.scalatest._
 
-import trie._
+import seqset.trie._
 
 class TrieTests extends FlatSpec with Matchers {
   // I'll happily admit that I don't know how to write proper, pretty, BDD-like, tests in ScalaTest.

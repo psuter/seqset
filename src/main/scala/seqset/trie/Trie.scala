@@ -5,12 +5,13 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *******************************************************************************/
+package seqset
 package trie
 
 import scala.annotation.tailrec
 
 // An immutable datastructure for sets of sequences of A.
-sealed trait Trie[A] {
+sealed trait Trie[A] extends SeqSet[A] {
   // Whether the trie contains any sequence.
   def isEmpty : Boolean
 
@@ -32,6 +33,10 @@ sealed trait Trie[A] {
   // Returns a trie encoding all the postfixes for a given prefix.
   def postfixes(prefix: A): Trie[A]
 
+  // Returns all heads for which there exist at least one sequence in the trie.
+  // (Will not tell you whether the empty sequence is contained.)
+  def heads : Set[A]
+
   // An iterator returning all sequences encoded in thie Trie.
   def iterator : Iterator[Seq[A]]
 
@@ -52,6 +57,8 @@ object Trie {
     def size : Int = map.values.foldLeft(0)(_ + _.size) + (if(isTerminal) 1 else 0)
 
     def nodeCount : Int = map.values.foldLeft(0)(_ + _.nodeCount) + 1
+
+    def heads : Set[A] = map.keySet
 
     def postfixes(prefix: A) : Trie[A] = map.getOrElse(prefix, emptyNode[A])
   
