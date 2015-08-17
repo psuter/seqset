@@ -163,7 +163,11 @@ class DFA[A] protected[regular](
   }
 
   private def bisimulates(other: DFA[A]) : Boolean = {
-    def bsim(a1: DFA[A], s1: Int, a2: DFA[A], s2: Int, m: Set[(Int,Int)]) : Boolean = if(m((s1,s2))) true else {
+    import scala.collection.mutable.{ Set => MSet }
+
+    val m = MSet.empty[(Int,Int)]
+
+    def bsim(a1: DFA[A], s1: Int, a2: DFA[A], s2: Int) : Boolean = if(m((s1,s2))) true else {
       if(a1.finalStates(s1) != a2.finalStates(s2)) {
         false
       } else {
@@ -172,10 +176,10 @@ class DFA[A] protected[regular](
         if(o1 != o2) {
           false
         } else {
-          val newM = m + ((s1,s2))
+          m += ((s1,s2))
 
           o1.foldLeft(true) { (b,k) =>
-            b && bsim(a1, a1.forward(s1)(k), a2, a2.forward(s2)(k), newM)
+            b && bsim(a1, a1.forward(s1)(k), a2, a2.forward(s2)(k))
           }
         }
       }
@@ -186,9 +190,21 @@ class DFA[A] protected[regular](
     val a2 = other.minimized
     val i2 = a2.initialState
 
-    (a1.stateCount == a2.stateCount &&
-     a1.finalStates.size == a2.finalStates.size &&
-     bsim(a1, i1, a2, i2, Set.empty))
+    if(a1.stateCount != a2.stateCount || a1.finalStates.size != a2.finalStates.size) {
+      false
+    } else {
+      //println(s"Checking bsim relation of automata with ${a1.stateCount} state(s)...")
+      //if(a1.stateCount > 71) {
+      //  println("### A ###")
+      //  println(a1)
+      //  println("### B ###")
+      //  println(a2)
+      //  println("### OVER ###")
+      //}
+      val r = bsim(a1, i1, a2, i2)
+      //println(s"...done!")
+      r
+    }
   }
 
   override lazy val toNFA: NFA[A] = {
@@ -198,6 +214,10 @@ class DFA[A] protected[regular](
       forward       = forward.map(_.mapValues(s => BitSet(s))),
       finalStates   = finalStates
     )
+  }
+
+  override lazy val cardinality : Cardinality = {
+    Unknown
   }
 
   override val toDFA: DFA[A] = this

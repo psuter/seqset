@@ -91,15 +91,15 @@ class RegularTests extends FlatSpec with Matchers {
   }
 
   "Equality between automata" should "be correct" in {
-    // val a = DFA("abc", "ab", "abce")
-    // val b = (DFA("ab") +++ (DFA("") | DFA("c", "ce"))).toDFA
-    // val c = DFA("ab", "abce")
+    val a = DFA("abc", "ab", "abce")
+    val b = (DFA("ab") +++ (DFA("") | DFA("c", "ce"))).toDFA
+    val c = DFA("ab", "abce")
 
-    // a.equals(b) should be (true) 
-    // b.equals(a) should be (true) 
-    // a.equals(c) should be (false) 
-    // c.equals(a) should be (false) 
-    // b.equals(c) should be (false) 
-    // c.equals(b) should be (false) 
+    a.equals(b) should be (true) 
+    b.equals(a) should be (true) 
+    a.equals(c) should be (false) 
+    c.equals(a) should be (false) 
+    b.equals(c) should be (false) 
+    c.equals(b) should be (false) 
   }
 }

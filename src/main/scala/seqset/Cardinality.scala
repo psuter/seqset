@@ -7,10 +7,7 @@
  *******************************************************************************/
 package seqset
 
-trait SeqSet[A] {
-  def contains(s: Seq[A]) : Boolean
-
-  def iterator : Iterator[Seq[A]]
-
-  def cardinality : Cardinality = Unknown  
-}
+sealed abstract class Cardinality
+case class  Finite(size: BigInt) extends Cardinality
+case object Infinite extends Cardinality
+case object Unknown extends Cardinality
