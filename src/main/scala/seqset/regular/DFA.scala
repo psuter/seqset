@@ -12,6 +12,8 @@ import scala.annotation.tailrec
 
 import scala.collection.immutable.BitSet
 
+import play.api.libs.json._
+
 class DFA[A] protected[regular](
   private val numStates : Int,
   private val initialState : Int,
@@ -50,6 +52,34 @@ class DFA[A] protected[regular](
       }
     }
     sb.toString
+  }
+
+  def toJson(transitionEncoder: A=>String) : JsValue = {
+    toJson(new Writes[A] {
+      def writes(a: A) : JsValue = Json.parse(transitionEncoder(a))
+    })
+  }
+
+  def toJson(implicit writes: Writes[A]) : JsValue = {
+    val transitions = JsArray(
+      for(i <- forward.indices;
+          (a,n) <- forward(i)) yield {
+            JsObject(Seq(
+              "src"   -> JsNumber(i),
+              "label" -> Json.toJson(a),
+              "dest"  -> JsNumber(n)
+            ))
+      }
+    )
+
+    val result = JsObject(Seq(
+      "states"      -> JsNumber(stateCount),
+      "initial"     -> JsNumber(initialState),
+      "final"       -> JsArray(finalStates.toList.map(JsNumber(_))),
+      "transitions" -> transitions
+    ))
+
+    result 
   }
 
   def minimized : DFA[A] = if(definitelyMinimal) {
