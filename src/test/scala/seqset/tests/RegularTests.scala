@@ -102,4 +102,10 @@ class RegularTests extends FlatSpec with Matchers {
     b.equals(c) should be (false) 
     c.equals(b) should be (false) 
   }
+
+  "Head filtering" should "work" in {
+    val mf = m1.filterHeads(c => c.toString.toUpperCase == "H").minimized
+    mf.contains("helicopter") should be (true)
+    mf.contains("mango") should be (false)
+  }
 }

@@ -266,6 +266,20 @@ class DFA[A] protected[regular](
     }
   }
 
+  override def filterHeads(f: A=>Boolean) : DFA[A] = {
+    val fstFwd: Map[A,Int] = forward(initialState)
+    val filteredFstFwd: Map[A,Int] = fstFwd.toSeq.filter(p => f(p._1)).toMap
+    
+    val newFwd = forward.updated(initialState, filteredFstFwd)
+    new DFA[A](
+      numStates,
+      initialState,
+      newFwd,
+      finalStates,
+      false
+    )
+  }
+
   override def equals(other: Any) : Boolean = {
     if(other == null || !other.isInstanceOf[AnyRef])
       return false

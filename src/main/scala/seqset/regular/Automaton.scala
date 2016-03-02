@@ -36,6 +36,8 @@ trait Automaton[A] extends SeqSet[A] {
 
   override def iterator : Iterator[Seq[A]] = this.toDFA.iterator
 
+  def filterHeads(f: A=>Boolean) : Automaton[A] = this.toDFA.filterHeads(f)
+
   // FIXME remove method with ugly name
   def postfixes(head: A) = tails(head)
 }
