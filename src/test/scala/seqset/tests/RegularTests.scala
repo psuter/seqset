@@ -33,6 +33,21 @@ class RegularTests extends FlatSpec with Matchers {
     e.toNFA.toDFA.stateCount should be (1)
   }
 
+  "The empty sequence automaton" should "behave properly" in {
+    val e = Automaton(Seq.empty[Int])
+
+    e.toNFA.toDFA.stateCount should be (1)
+
+    e.contains(Seq.empty) should be (true)
+    e.contains(Seq(1, 2, 3)) should be (false)
+
+    val ne = e + Seq(1, 2, 3)
+    ne.contains(Seq.empty) should be (true)
+    ne.contains(Seq(1, 2, 3)) should be (true)
+    ne.contains(Seq(1, 2)) should be (false)
+    ne.contains(Seq(1, 2, 3, 4)) should be (false)
+  }
+
   "A multi-sequence automaton" should "behave properly" in {
     a1.stateCount should be (29)
     for(s <- s1) { a1.contains(s) should be (true) }

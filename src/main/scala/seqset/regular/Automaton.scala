@@ -44,4 +44,6 @@ trait Automaton[A] extends SeqSet[A] {
 
 object Automaton {
   def empty[A] : Automaton[A] = DFA.empty[A]
+
+  def apply[A](seqs: Seq[A]*) : Automaton[A] = DFA.apply(seqs : _*)
 }

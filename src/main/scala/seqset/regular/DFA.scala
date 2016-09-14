@@ -93,6 +93,13 @@ class DFA[A] protected[regular](
       return DFA.empty[A]
     }
 
+    if(numStates == 1) {
+      // Single (accepting) state, this is already minimal.
+      return new DFA[A](numStates, initialState, forward, finalStates, true)
+    }
+
+    // After this point we know that there are at least 2 states.
+
     // state   -> classID
     val classes : Array[Int] = Array.tabulate(numStates) { s =>
       if(finalStates(s)) 0 else 1
