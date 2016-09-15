@@ -132,6 +132,13 @@ class NFA[A] protected[regular](
   }
 
   def concat(other: NFA[A]) : NFA[A] = {
+    // The general idea is that we rename the states in the "right" automaton to higher values,
+    // keep the union of the transions in the left and right automata, add transitions from the
+    // left automaton to the initial states of the right automaton (for every transition that
+    // could have gone into an originally left-finite state). If there are initial final states in
+    // left we also have to make all right-initial states initial.
+
+    // The transitions within the right automaton, renamed
     val nofw = other.forward.toSeq.map(fm => fm.mapValues(_.map(_ + numStates)))
 
     val rightInitial : BitSet = other.initialStates.map(_ + numStates)
@@ -150,9 +157,17 @@ class NFA[A] protected[regular](
 
     val newFinal = other.finalStates.map(_ + numStates)
 
+    val newInitial = if(initialStates.intersect(finalStates).nonEmpty) {
+      // the left automaton accepted the empty sequence, therefore every right-sequence
+      // should be accepted by the new automaton; we make all right-initial states initial
+      initialStates ++ rightInitial
+    } else {
+      initialStates
+    }
+
     new NFA[A](
       numStates + other.numStates,
-      initialStates,
+      newInitial,
       newForward,
       newFinal
     )

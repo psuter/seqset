@@ -46,6 +46,10 @@ class RegularTests extends FlatSpec with Matchers {
     ne.contains(Seq(1, 2, 3)) should be (true)
     ne.contains(Seq(1, 2)) should be (false)
     ne.contains(Seq(1, 2, 3, 4)) should be (false)
+
+    val ne2 = e +++ Automaton(Seq(1, 2, 3))
+    ne2.contains(Seq.empty) should be (false)
+    ne2.contains(Seq(1, 2, 3)) should be (true)
   }
 
   "A multi-sequence automaton" should "behave properly" in {
