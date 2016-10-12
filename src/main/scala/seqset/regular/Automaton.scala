@@ -25,11 +25,11 @@ trait Automaton[A] extends SeqSet[A] {
   def +(s: Seq[A]) : Automaton[A] = this | DFA(s)
 
   def |(other: Automaton[A]) : Automaton[A] = {
-    (this.toNFA union other.toNFA).toDFA.minimized
+    (this.toNFA union other.toNFA)
   }
 
   def +++(other: Automaton[A]) : Automaton[A] = {
-    (this.toNFA concat other.toNFA).toDFA.minimized
+    (this.toNFA concat other.toNFA)
   }
 
   def tails(head: A) : Automaton[A] = this.toDFA.tails(head)
