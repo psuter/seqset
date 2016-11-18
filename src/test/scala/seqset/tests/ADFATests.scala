@@ -103,12 +103,12 @@ class ADFATests extends FlatSpec with Matchers {
         val a3 = ADFA("c", "ce")
         val a4 = a2 | a3
         val a5 = a1 +++ a4
-        // val a6 = a5.toDFA
-        // val a7 = a6.minimized
+        val a6 = a5.toDFA
+        val a7 = a6.minimized
 
         a5.accepts("abce") should be(true)
-        // a6.accepts("abce") should be(true)
-        // a7.accepts("abce") should be(true)
+        a6.accepts("abce") should be(true)
+        a7.accepts("abce") should be(true)
     }
 
     "Equality between ADFAs" should "be correct" in {

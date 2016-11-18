@@ -48,7 +48,7 @@ class ADFA[A] protected[regular] (private val dagIndex: Int)(implicit private va
 
     override def iterator: Iterator[Seq[A]] = ???
 
-    override def filterHeads(f: A => Boolean): Automaton[A] = ???
+    override def filterHeads(f: A => Boolean): Automaton[A] = this.toDFA.filterHeads(f)
 
     override def equals(other: Any): Boolean = {
         (other != null && other.isInstanceOf[ADFA[_]] && {
@@ -69,7 +69,7 @@ class ADFADag[A]() {
 
     // Unique index for all "characters", so that all other structures can use strings.
     private val charToIndex = MutableMap.empty[A, Int]
-    private val indexToChar = ArrayBuffer.empty[A]
+    protected[regular] val indexToChar = ArrayBuffer.empty[A]
     protected[regular] def lookupChar(c: A): Int = {
         charToIndex.getOrElse(c, this.synchronized {
             indexToChar.append(c)
@@ -220,14 +220,37 @@ object ADFA {
     }
 
     def convertToDFA[A](a: ADFA[A]): DFA[A] = {
-        ???
-        /*
-class DFA[A] protected[regular](
-  private val numStates : Int,
-  private val initialState : Int,
-  private val forward : Array[Map[A,Int]],
-  private val finalStates : BitSet,
-  private val definitelyMinimal : Boolean) extends Automaton[A] {
-    }*/
+        import scala.collection.mutable.{ Set => MutableSet }
+        import scala.collection.mutable.{ Map => MutableMap }
+
+        val dag = a.dag
+
+        val mapping = MutableMap.empty[Int, (Int, Boolean, Map[A, Int])]
+        def rec(dagIndex: Int): Int = mapping.get(dagIndex).map(_._1).getOrElse {
+            val dag.StateDef(accepting, fwd) = dag.indexToState(dagIndex)
+
+            val thisForward: Map[A, Int] = fwd.map({
+                case (charIndex, nextStateIndex) =>
+                    val char: A = dag.indexToChar(charIndex)
+                    val state = rec(nextStateIndex)
+                    (char -> state)
+            }).toMap
+
+            val stateId = mapping.size
+
+            mapping(dagIndex) = (stateId, accepting, thisForward)
+            stateId
+        }
+
+        // Side-effecting!
+        val initialState = rec(a.dagIndex)
+
+        val sortedMapping = mapping.values.toList.sortBy(_._1)
+        val numStates = mapping.size
+        val forward = sortedMapping.map(_._3).toArray
+        val finalStates = BitSet(sortedMapping.filter(_._2).map(_._1): _*)
+        val definitelyMinimal = true
+
+        new DFA[A](numStates, initialState, forward, finalStates, definitelyMinimal)
     }
 }
