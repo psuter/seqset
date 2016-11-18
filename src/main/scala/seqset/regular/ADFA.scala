@@ -44,9 +44,9 @@ class ADFA[A] protected[regular] (private val dagIndex: Int)(implicit private va
         ADFA.concat[A](this, o)
     }
 
-    override def tails(head: A): Automaton[A] = ???
+    override def tails(head: A): Automaton[A] = this.toDFA.tails(head)
 
-    override def iterator: Iterator[Seq[A]] = ???
+    override def iterator: Iterator[Seq[A]] = this.toDFA.iterator
 
     override def filterHeads(f: A => Boolean): Automaton[A] = this.toDFA.filterHeads(f)
 
