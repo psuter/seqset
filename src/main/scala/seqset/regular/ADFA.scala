@@ -123,6 +123,18 @@ class ADFADag[A]() {
             }
         }
     }
+
+    // Caches for Union and Concatenation.
+    protected[regular] val unionCache = MutableMap.empty[(Int, Int), Int]
+    protected[regular] val concatCache = MutableMap.empty[(Int, Int), Int]
+
+    protected[regular] def cachedOp(cache: MutableMap[(Int, Int), Int], op: (Int, Int) => Int)(dagIndex1: Int, dagIndex2: Int): Int = {
+        cache.getOrElse((dagIndex1, dagIndex2), {
+            val result = op(dagIndex1, dagIndex2)
+            cache((dagIndex1, dagIndex2)) = result
+            result
+        })
+    }
 }
 
 object ADFA {
@@ -149,30 +161,11 @@ object ADFA {
         }
     }
 
-    def union[A](a1: ADFA[A], a2: ADFA[A]): ADFA[A] = {
-        require(a1.dag eq a2.dag)
+    private def unionOp[A](dag: ADFADag[A])(i1: Int, i2: Int): Int = {
+        implicit val d = dag
 
-        val minIndex = a1.dagIndex min a2.dagIndex
-        val maxIndex = a1.dagIndex max a2.dagIndex
-        println("U " + minIndex + " " + maxIndex)
-        println("S " + a1.dag.indexToChar.length)
-
-        implicit val dag = a1.dag
-
-        if (a1.dagIndex == a2.dagIndex) {
-            return a1
-        }
-
-        if (a1.dagIndex == dag.finalRejecting) {
-            return a2
-        }
-
-        if (a2.dagIndex == dag.finalRejecting) {
-            return a1
-        }
-
-        val dag.StateDef(acc1, fwd1) = dag.indexToState(a1.dagIndex)
-        val dag.StateDef(acc2, fwd2) = dag.indexToState(a2.dagIndex)
+        val dag.StateDef(acc1, fwd1) = dag.indexToState(i1)
+        val dag.StateDef(acc2, fwd2) = dag.indexToState(i2)
 
         val newKeys = (fwd1.map(_._1) ++ fwd2.map(_._1)).sorted.distinct
 
@@ -191,21 +184,46 @@ object ADFA {
         })
 
         val newStateDef = dag.StateDef(acc1 || acc2, newFwd)
-        new ADFA[A](dag.lookupState(newStateDef))
+        dag.lookupState(newStateDef)
     }
 
-    def concat[A](a1: ADFA[A], a2: ADFA[A]): ADFA[A] = {
+    def union[A](a1: ADFA[A], a2: ADFA[A]): ADFA[A] = {
+        require(a1.dag eq a2.dag)
+
         val minIndex = a1.dagIndex min a2.dagIndex
         val maxIndex = a1.dagIndex max a2.dagIndex
-        println("C " + minIndex + " " + maxIndex)
-        println("S " + a1.dag.indexToChar.length)
-
-        require(a1.dag eq a2.dag)
+        //println("U " + minIndex + " " + maxIndex)
+        //println("S " + a1.dag.indexToChar.length)
 
         implicit val dag = a1.dag
 
-        val dag.StateDef(acc1, fwd1) = dag.indexToState(a1.dagIndex)
-        val dag.StateDef(acc2, fwd2) = dag.indexToState(a2.dagIndex)
+        if (a1.dagIndex == a2.dagIndex) {
+            return a1
+        }
+
+        if (a1.dagIndex == dag.finalRejecting) {
+            return a2
+        }
+
+        if (a2.dagIndex == dag.finalRejecting) {
+            return a1
+        }
+
+        // No cache
+        // val op: (Int, Int) => Int = unionOp(dag)
+        // With cache.
+        val op: (Int, Int) => Int = dag.cachedOp(dag.unionCache, unionOp(dag))
+
+        new ADFA[A](op(minIndex, maxIndex))
+    }
+
+    private def concatOp[A](dag: ADFADag[A])(i1: Int, i2: Int): Int = {
+        implicit val d = dag
+
+        val dag.StateDef(acc1, fwd1) = dag.indexToState(i1)
+        val dag.StateDef(acc2, fwd2) = dag.indexToState(i2)
+
+        val a2 = new ADFA[A](i2)
 
         val newKeys = fwd1.map({
             case (k, v) =>
@@ -223,10 +241,28 @@ object ADFA {
 
         val withoutAcc = new ADFA[A](dag.lookupState(dag.StateDef(false, newKeys)))
         if (acc1) {
-            ADFA.union(a2, withoutAcc)
+            ADFA.union(a2, withoutAcc).dagIndex
         } else {
-            withoutAcc
+            withoutAcc.dagIndex
         }
+    }
+
+    def concat[A](a1: ADFA[A], a2: ADFA[A]): ADFA[A] = {
+        //val minIndex = a1.dagIndex min a2.dagIndex
+        //val maxIndex = a1.dagIndex max a2.dagIndex
+        //println("C " + minIndex + " " + maxIndex)
+        //println("S " + a1.dag.indexToChar.length)
+
+        require(a1.dag eq a2.dag)
+
+        implicit val dag = a1.dag
+
+        // No cache
+        // val op: (Int, Int) => Int = concatOp(dag)
+        // With cache.
+        val op: (Int, Int) => Int = dag.cachedOp(dag.concatCache, concatOp(dag))
+
+        new ADFA[A](op(a1.dagIndex, a2.dagIndex))
     }
 
     def convertToDFA[A](a: ADFA[A]): DFA[A] = {
