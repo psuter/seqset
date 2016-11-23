@@ -125,4 +125,24 @@ class ADFATests extends FlatSpec with Matchers {
         b.equals(c) should be(false)
         c.equals(b) should be(false)
     }
+
+    "ADFA.filterHeads" should "behave" in {
+        implicit val dag = ADFA.makeDag[Char]()
+
+        val a = ADFA("abc", "abcde", "ABCD", "bde", "B", "", "asd", "Aasjkla")
+
+        a.accepts("abcde") should be(true)
+        a.accepts("") should be(true)
+        a.accepts("ABCD") should be(true)
+        a.accepts("B") should be(true)
+
+        val f = a.filterHeads((c: Char) => c.toLower == 'a')
+
+        f.isInstanceOf[ADFA[_]] should be(true)
+
+        f.accepts("abcde") should be(true)
+        f.accepts("") should be(false)
+        f.accepts("ABCD") should be(true)
+        f.accepts("B") should be(false)
+    }
 }
