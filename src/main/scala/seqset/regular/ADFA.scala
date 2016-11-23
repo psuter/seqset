@@ -152,6 +152,11 @@ object ADFA {
     def union[A](a1: ADFA[A], a2: ADFA[A]): ADFA[A] = {
         require(a1.dag eq a2.dag)
 
+        val minIndex = a1.dagIndex min a2.dagIndex
+        val maxIndex = a1.dagIndex max a2.dagIndex
+        println("U " + minIndex + " " + maxIndex)
+        println("S " + a1.dag.indexToChar.length)
+
         implicit val dag = a1.dag
 
         if (a1.dagIndex == a2.dagIndex) {
@@ -190,6 +195,11 @@ object ADFA {
     }
 
     def concat[A](a1: ADFA[A], a2: ADFA[A]): ADFA[A] = {
+        val minIndex = a1.dagIndex min a2.dagIndex
+        val maxIndex = a1.dagIndex max a2.dagIndex
+        println("C " + minIndex + " " + maxIndex)
+        println("S " + a1.dag.indexToChar.length)
+
         require(a1.dag eq a2.dag)
 
         implicit val dag = a1.dag
