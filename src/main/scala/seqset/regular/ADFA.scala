@@ -44,13 +44,11 @@ class ADFA[A] protected[regular] (private val dagIndex: Int)(implicit private va
         ADFA.concat[A](this, o)
     }
 
-    override def tails(head: A): Automaton[A] = ???
+    override def tails(head: A): Automaton[A] = ADFA.tails[A](this, head)
 
     override def iterator: Iterator[Seq[A]] = this.toDFA.iterator
 
-    override def filterHeads(f: A => Boolean): Automaton[A] = {
-        ADFA.filterHeads[A](this, f)
-    }
+    override def filterHeads(f: A => Boolean): Automaton[A] = ADFA.filterHeads[A](this, f)
 
     override def equals(other: Any): Boolean = {
         (other != null && other.isInstanceOf[ADFA[_]] && {
@@ -300,6 +298,20 @@ object ADFA {
         val definitelyMinimal = true
 
         new DFA[A](numStates, initialState, forward, finalStates, definitelyMinimal)
+    }
+
+    private def tails[A](a: ADFA[A], head: A): ADFA[A] = {
+        implicit val dag = a.dag
+
+        val dag.StateDef(_, fwd) = dag.indexToState(a.dagIndex)
+
+        val charIndex = dag.lookupChar(head)
+
+        fwd.find(_._1 == charIndex).map { pair =>
+            new ADFA[A](pair._2)
+        } getOrElse {
+            ADFA.empty[A]
+        }
     }
 
     private def filterHeads[A](a: ADFA[A], predicate: A => Boolean): ADFA[A] = {
